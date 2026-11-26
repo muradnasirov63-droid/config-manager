@@ -1,0 +1,62 @@
+{
+  "uid": "config-manager-lr4",
+  "title": "Config Manager: мониторинг (вариант 15)",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Активность: запросы в секунду (RPS по маршрутам)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [{"expr": "sum by (path) (rate(http_requests_total[1m]))", "legendFormat": "{{path}}"}]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Время отклика API (95-й перцентиль)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[1m])))", "legendFormat": "p95 общий"}]
+    },
+    {
+      "id": 3,
+      "type": "bargauge",
+      "title": "Топ ошибок (4xx и 5xx за 1 час)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "topk(5, sum by (path, status) (increase(http_requests_total{status=~\"4..|5..\"}[1h])))", "legendFormat": "{{path}} ({{status}})"}]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Время валидации и обновления конфигов (p95)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, path) (rate(http_request_duration_seconds_bucket{path=~\"/configs.*\"}[1m])))", "legendFormat": "p95 {{path}}"}]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Сервисов и конфигураций в базе",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "config_services_total", "legendFormat": "Сервисы"},
+        {"expr": "config_configs_total", "legendFormat": "Конфигурации"}
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Версий конфигураций и ошибок валидации",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "config_versions_total", "legendFormat": "Версии (Т1)"},
+        {"expr": "config_validation_errors_total", "legendFormat": "Ошибки валидации (Т2)"}
+      ]
+    }
+  ]
+}
